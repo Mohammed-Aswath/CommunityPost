@@ -1,0 +1,143 @@
+/* App.css */
+
+/* Core Theme Variables */
+:root {
+  --bg-color: #f4f6fa;
+  --text-color: #1c1c1c;
+  --header-gradient: linear-gradient(to right, #00303f, #2a6f89);
+  --card-bg: white;
+  --link-color: #1976d2;
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --login-logo: url('https://cdn-icons-png.flaticon.com/512/5087/5087579.png');
+}
+
+body.dark {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --header-gradient: linear-gradient(to right, #141e30, #243b55);
+  --card-bg: #1e1e1e;
+  --link-color: #90caf9;
+  --shadow: 0 8px 16px rgba(255, 255, 255, 0.05);
+  --login-logo: url('https://cdn-icons-png.flaticon.com/512/6697/6697537.png');
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* App Container */
+.app-container {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding-bottom: 2rem;
+}
+
+/* Header */
+.header {
+  background: var(--header-gradient);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: background 0.4s ease;
+}
+
+.header .title {
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header .login-logo {
+  width: 36px;
+  height: 36px;
+  background-image: var(--login-logo);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Header Buttons */
+.header .actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.header .button {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.header .button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* View Page */
+.view-container {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Post Cards */
+.link-card {
+  background: var(--card-bg);
+  color: var(--text-color);
+  padding: 1.5rem;
+  margin: 1rem 0;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.link-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.link-card h3 {
+  margin: 0 0 0.5rem;
+}
+
+.link-card p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.link-card a {
+  color: var(--link-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.link-card a:hover {
+  text-decoration: underline;
+  color: #1565c0;
+}
