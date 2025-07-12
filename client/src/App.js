@@ -5,7 +5,8 @@ import ViewPage from './ViewPage';
 import LoginPage from './LoginPage';
 import { AuthProvider } from './AuthContext';
 import { ThemeProvider, ThemeContext } from './ThemeContext';
-import PrivateRoute from './PrivateRoute'; // ✅ Add this line
+import PrivateRoute from './PrivateRoute'; 
+import DomainPostsPage from './DomainPostsPage';
 
 import './App.css';
 
@@ -71,6 +72,8 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<ViewPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/domain/:domainName" element={<DomainPostsPage />} />
+
         <Route
           path="/post"
           element={

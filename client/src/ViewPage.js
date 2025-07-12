@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import './App.css'; // Ensure the styles are included
+import { useNavigate } from 'react-router-dom';
+import './App.css';
 
 function ViewPage() {
-  const [links, setLinks] = useState([]);
+  const [domains, setDomains] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("https://communitypost-5g0u.onrender.com/api/links")
+    fetch("https://communitypost-5g0u.onrender.com/api/domains")
       .then(res => res.json())
-      .then(data => setLinks(data));
+      .then(data => setDomains(data));
   }, []);
 
   return (
     <div className="view-container">
-      <h2 className="view-title">📌 Important Links</h2>
-      {links.map(link => (
-        <div key={link._id} className="link-card">
-          <h3>{link.title}</h3>
-          <p>{link.description}</p>
-          <a
-            href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            🔗 {link.url}
-          </a>
+      <h2 className="view-title">📚 Explore Domains</h2>
+      {domains.map(domain => (
+        <div
+          key={domain._id}
+          className="link-card"
+          style={{ cursor: "pointer", transition: "0.3s" }}
+          onClick={() => navigate(`/domain/${encodeURIComponent(domain.name)}`)}
+        >
+          <h3>{domain.name}</h3>
+          <p>Click to view resources in this domain</p>
         </div>
       ))}
     </div>
