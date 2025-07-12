@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: "*", // Allow all during testing (not recommended in prod)
+  origin: "*", // Allow all during testing
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
@@ -55,7 +55,9 @@ function authMiddleware(req, res, next) {
     });
 }
 
-// Post a new link
+// CRUD Routes
+
+// CREATE
 app.post("/api/links", authMiddleware, async (req, res) => {
     const { title, description, url } = req.body;
     const newLink = new Link({ title, description, url });
@@ -63,10 +65,23 @@ app.post("/api/links", authMiddleware, async (req, res) => {
     res.json({ message: "Link posted" });
 });
 
-// Get all links (public)
+// READ (Public)
 app.get("/api/links", async (req, res) => {
     const links = await Link.find().sort({ postedAt: -1 });
     res.json(links);
+});
+
+// UPDATE
+app.put("/api/links/:id", authMiddleware, async (req, res) => {
+    const { title, description, url } = req.body;
+    await Link.findByIdAndUpdate(req.params.id, { title, description, url });
+    res.json({ message: "Link updated" });
+});
+
+// DELETE
+app.delete("/api/links/:id", authMiddleware, async (req, res) => {
+    await Link.findByIdAndDelete(req.params.id);
+    res.json({ message: "Link deleted" });
 });
 
 const PORT = process.env.PORT || 5000;
