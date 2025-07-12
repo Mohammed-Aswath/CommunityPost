@@ -15,6 +15,7 @@ function PostPage() {
   const [newDomain, setNewDomain] = useState('');
   const [editingDomain, setEditingDomain] = useState(null);
   const [editingDomainName, setEditingDomainName] = useState('');
+  const [expandedDomains, setExpandedDomains] = useState({}); // for collapsible boxes
 
   const linkAPI = "https://communitypost-5g0u.onrender.com/api/links";
   const domainAPI = "https://communitypost-5g0u.onrender.com/api/domains";
@@ -93,7 +94,6 @@ function PostPage() {
     setDomain(link.domain);
   };
 
-  // DOMAIN HANDLERS
   const handleAddDomain = async () => {
     if (!newDomain) return;
     const res = await fetch(domainAPI, {
@@ -144,6 +144,18 @@ function PostPage() {
       alert("Error deleting domain");
     }
   };
+
+  const toggleDomain = (name) => {
+    setExpandedDomains(prev => ({
+      ...prev,
+      [name]: !prev[name]
+    }));
+  };
+
+  const groupedLinks = domains.reduce((acc, dom) => {
+    acc[dom.name] = links.filter(link => link.domain === dom.name);
+    return acc;
+  }, {});
 
   return (
     <div className="view-container">
@@ -205,16 +217,17 @@ function PostPage() {
         </div>
       </div>
 
-      <div className="section-title" style={{ marginTop: "2rem" }}>📂 Manage Domains</div>
       <div className="link-card" style={{ maxWidth: "500px" }}>
-        <input
-          type="text"
-          placeholder="New Domain Name"
-          value={newDomain}
-          onChange={e => setNewDomain(e.target.value)}
-        />
-        <button className="header button" onClick={handleAddDomain}>Add Domain</button>
-
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+          <input
+            type="text"
+            placeholder="New Domain Name"
+            value={newDomain}
+            onChange={e => setNewDomain(e.target.value)}
+            style={{ flexGrow: 1 }}
+          />
+          <button className="header button" onClick={handleAddDomain}>Add Domain</button>
+        </div>
         {domains.map(d => (
           <div key={d._id} style={{ marginTop: "0.75rem" }}>
             {editingDomain === d._id ? (
@@ -224,58 +237,73 @@ function PostPage() {
                   value={editingDomainName}
                   onChange={e => setEditingDomainName(e.target.value)}
                 />
-                <button className="header button" onClick={() => handleEditDomain(d._id)}>Save</button>
-                <button className="header button" onClick={() => setEditingDomain(null)}>Cancel</button>
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <button className="header button" onClick={() => handleEditDomain(d._id)}>Save</button>
+                  <button className="header button" onClick={() => setEditingDomain(null)}>Cancel</button>
+                </div>
               </>
             ) : (
-              <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>{d.name}</span>
-                <button className="header button" onClick={() => {
-                  setEditingDomain(d._id);
-                  setEditingDomainName(d.name);
-                }}>Edit</button>
-                <button
-                  className="header button"
-                  style={{ backgroundColor: "#a31212" }}
-                  onClick={() => handleDeleteDomain(d._id)}
-                >
-                  Delete
-                </button>
-              </>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button className="header button" onClick={() => {
+                    setEditingDomain(d._id);
+                    setEditingDomainName(d.name);
+                  }}>Edit</button>
+                  <button className="header button" style={{ backgroundColor: "#a31212" }} onClick={() => handleDeleteDomain(d._id)}>Delete</button>
+                </div>
+              </div>
             )}
           </div>
         ))}
       </div>
 
-      <div className="section-title" style={{ marginTop: "2rem" }}>📎 All Links</div>
-      {links.length === 0 ? (
-        <p>No links found.</p>
-      ) : (
-        links.map(link => (
-          <div key={link._id} className="link-card">
-            <h3>{link.title}</h3>
-            <p>{link.description}</p>
-            <p><strong>Domain:</strong> {link.domain}</p>
-            <a
-              href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.url}
-            </a>
-            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
-              <button className="header button" onClick={() => handleEdit(link)}>Edit</button>
-              <button
-                className="header button"
-                style={{ backgroundColor: "#a31212" }}
-                onClick={() => handleDelete(link._id)}
-              >
-                Delete
-              </button>
-            </div>
+      <div className="section-title" style={{ marginTop: "2rem" }}>📎 Posts by Domain</div>
+      {domains.map(d => (
+        <div key={d._id} className="link-card" style={{ marginBottom: "1rem" }}>
+          <div
+            onClick={() => toggleDomain(d.name)}
+            style={{
+              cursor: "pointer",
+              fontWeight: "bold",
+            //   color: "#000000ff",
+              marginBottom: "0.5rem",
+              background: "#000000ff",
+              padding: "0.5rem",
+              borderRadius: "4px"
+            }}
+          >
+            {d.name} {expandedDomains[d.name] ? '▲' : '▼'}
           </div>
-        ))
-      )}
+          {expandedDomains[d.name] && groupedLinks[d.name] && groupedLinks[d.name].length > 0 ? (
+            groupedLinks[d.name].map(link => (
+              <div key={link._id} className="link-card" style={{ marginTop: "0.5rem" }}>
+                <h3>{link.title}</h3>
+                <p>{link.description}</p>
+                <a
+                  href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.url}
+                </a>
+                <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+                  <button className="header button" onClick={() => handleEdit(link)}>Edit</button>
+                  <button
+                    className="header button"
+                    style={{ backgroundColor: "#a31212" }}
+                    onClick={() => handleDelete(link._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : expandedDomains[d.name] ? (
+            <p style={{ margin: "0.5rem 0" }}>No posts in this domain.</p>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 }
