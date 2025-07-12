@@ -8,11 +8,10 @@ function PostPage() {
   const [description, setDescription] = useState('');
   const [url, setUrl] = useState('');
   const [links, setLinks] = useState([]);
-  const [editId, setEditId] = useState(null); // for editing
+  const [editId, setEditId] = useState(null);
 
   const api = "https://communitypost-5g0u.onrender.com/api/links";
 
-  // 🔄 Fetch links
   const fetchLinks = async () => {
     const res = await fetch(api);
     const data = await res.json();
@@ -23,7 +22,6 @@ function PostPage() {
     fetchLinks();
   }, []);
 
-  // ➕ Add or ✏️ Update link
   const handleSubmit = async () => {
     if (!title || !description || !url) {
       alert("Please fill all fields");
@@ -54,7 +52,6 @@ function PostPage() {
     }
   };
 
-  // 🗑️ Delete link
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
 
@@ -73,7 +70,6 @@ function PostPage() {
     }
   };
 
-  // 📝 Load link for editing
   const handleEdit = (link) => {
     setEditId(link._id);
     setTitle(link.title);
@@ -82,34 +78,81 @@ function PostPage() {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>{editId ? "Edit Link" : "Post Link"}</h2>
-      <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} /><br /><br />
-      <input placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} /><br /><br />
-      <input placeholder="Link URL" value={url} onChange={e => setUrl(e.target.value)} /><br /><br />
-      <button onClick={handleSubmit}>{editId ? "Update" : "Post"}</button>
-      {editId && <button onClick={() => { setEditId(null); setTitle(""); setDescription(""); setUrl(""); }}>Cancel Edit</button>}
-      <button onClick={logout} style={{ marginLeft: "1rem" }}>Logout</button>
+    <div className="view-container">
+      <div className="section-title">📌 {editId ? "Edit Link" : "Post Link"}</div>
 
-      <hr />
+      <div className="link-card" style={{ maxWidth: "500px" }}>
+        <input
+          type="text"
+          placeholder="Title"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }}
+        />
+        <input
+          type="text"
+          placeholder="Description"
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }}
+        />
+        <input
+          type="text"
+          placeholder="Link URL"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          style={{ marginBottom: "1rem", padding: "0.5rem", width: "100%" }}
+        />
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button className="header button" onClick={handleSubmit}>
+            {editId ? "Update" : "Post"}
+          </button>
+          {editId && (
+            <button
+              className="header button"
+              onClick={() => {
+                setEditId(null);
+                setTitle('');
+                setDescription('');
+                setUrl('');
+              }}
+            >
+              Cancel
+            </button>
+          )}
+          <button className="header button" onClick={logout}>
+            Logout
+          </button>
+        </div>
+      </div>
 
-      <h3>All Links</h3>
+      <div className="section-title" style={{ marginTop: "2rem" }}>📎 All Links</div>
       {links.length === 0 ? (
         <p>No links found.</p>
       ) : (
-        <ul>
-          {links.map(link => (
-            <li key={link._id} style={{ marginBottom: "1rem" }}>
-              <strong>{link.title}</strong><br />
-              {link.description}<br />
-              <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">
-                {link.url}
-              </a><br />
-              <button onClick={() => handleEdit(link)}>Edit</button>
-              <button onClick={() => handleDelete(link._id)} style={{ marginLeft: "0.5rem", color: "red" }}>Delete</button>
-            </li>
-          ))}
-        </ul>
+        links.map(link => (
+          <div key={link._id} className="link-card">
+            <h3>{link.title}</h3>
+            <p>{link.description}</p>
+            <a
+              href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {link.url}
+            </a>
+            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+              <button className="header button" onClick={() => handleEdit(link)}>Edit</button>
+              <button
+                className="header button"
+                style={{ backgroundColor: "#a31212" }}
+                onClick={() => handleDelete(link._id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))
       )}
     </div>
   );
