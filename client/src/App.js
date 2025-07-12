@@ -5,6 +5,7 @@ import ViewPage from './ViewPage';
 import LoginPage from './LoginPage';
 import { AuthProvider } from './AuthContext';
 import { ThemeProvider, ThemeContext } from './ThemeContext';
+import PrivateRoute from './PrivateRoute'; // ✅ Add this line
 
 import './App.css';
 
@@ -22,14 +23,17 @@ function ThemeEffect() {
   return null;
 }
 
-
 function Header() {
   const navigate = useNavigate();
   const { darkMode, setDarkMode } = useContext(ThemeContext);
 
   return (
     <div className="header">
-      <div className="title">
+      <div
+        className="title"
+        onClick={() => navigate('/')}
+        style={{ cursor: 'pointer' }}
+      >
         Community Board
       </div>
       <div className="actions">
@@ -67,7 +71,14 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<ViewPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/post" element={<PostPage />} />
+        <Route
+          path="/post"
+          element={
+            <PrivateRoute>
+              <PostPage />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </>
   );
@@ -85,6 +96,5 @@ function App() {
     </ThemeProvider>
   );
 }
-
 
 export default App;

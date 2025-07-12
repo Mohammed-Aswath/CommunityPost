@@ -7,29 +7,43 @@ function PostPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [url, setUrl] = useState('');
+  const [domain, setDomain] = useState('');
   const [links, setLinks] = useState([]);
+  const [domains, setDomains] = useState([]);
   const [editId, setEditId] = useState(null);
 
-  const api = "https://communitypost-5g0u.onrender.com/api/links";
+  const [newDomain, setNewDomain] = useState('');
+  const [editingDomain, setEditingDomain] = useState(null);
+  const [editingDomainName, setEditingDomainName] = useState('');
+
+  const linkAPI = "https://communitypost-5g0u.onrender.com/api/links";
+  const domainAPI = "https://communitypost-5g0u.onrender.com/api/domains";
+
+  useEffect(() => {
+    fetchLinks();
+    fetchDomains();
+  }, []);
 
   const fetchLinks = async () => {
-    const res = await fetch(api);
+    const res = await fetch(linkAPI);
     const data = await res.json();
     setLinks(data);
   };
 
-  useEffect(() => {
-    fetchLinks();
-  }, []);
+  const fetchDomains = async () => {
+    const res = await fetch(domainAPI);
+    const data = await res.json();
+    setDomains(data);
+  };
 
   const handleSubmit = async () => {
-    if (!title || !description || !url) {
+    if (!title || !description || !url || !domain) {
       alert("Please fill all fields");
       return;
     }
 
     const method = editId ? 'PUT' : 'POST';
-    const endpoint = editId ? `${api}/${editId}` : api;
+    const endpoint = editId ? `${linkAPI}/${editId}` : linkAPI;
 
     const res = await fetch(endpoint, {
       method,
@@ -37,7 +51,7 @@ function PostPage() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ title, description, url }),
+      body: JSON.stringify({ title, description, url, domain }),
     });
 
     if (res.ok) {
@@ -45,6 +59,7 @@ function PostPage() {
       setTitle('');
       setDescription('');
       setUrl('');
+      setDomain('');
       setEditId(null);
       fetchLinks();
     } else {
@@ -55,7 +70,7 @@ function PostPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
 
-    const res = await fetch(`${api}/${id}`, {
+    const res = await fetch(`${linkAPI}/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -75,6 +90,59 @@ function PostPage() {
     setTitle(link.title);
     setDescription(link.description);
     setUrl(link.url);
+    setDomain(link.domain);
+  };
+
+  // DOMAIN HANDLERS
+  const handleAddDomain = async () => {
+    if (!newDomain) return;
+    const res = await fetch(domainAPI, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name: newDomain }),
+    });
+    if (res.ok) {
+      setNewDomain('');
+      fetchDomains();
+    } else {
+      alert("Error adding domain");
+    }
+  };
+
+  const handleEditDomain = async (id) => {
+    const res = await fetch(`${domainAPI}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name: editingDomainName }),
+    });
+    if (res.ok) {
+      setEditingDomain(null);
+      setEditingDomainName('');
+      fetchDomains();
+    } else {
+      alert("Error updating domain");
+    }
+  };
+
+  const handleDeleteDomain = async (id) => {
+    if (!window.confirm("Delete this domain?")) return;
+    const res = await fetch(`${domainAPI}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      fetchDomains();
+    } else {
+      alert("Error deleting domain");
+    }
   };
 
   return (
@@ -101,8 +169,18 @@ function PostPage() {
           placeholder="Link URL"
           value={url}
           onChange={e => setUrl(e.target.value)}
-          style={{ marginBottom: "1rem", padding: "0.5rem", width: "100%" }}
+          style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }}
         />
+        <select
+          value={domain}
+          onChange={e => setDomain(e.target.value)}
+          style={{ marginBottom: "1rem", padding: "0.5rem", width: "100%" }}
+        >
+          <option value="">Select Domain</option>
+          {domains.map(d => (
+            <option key={d._id} value={d.name}>{d.name}</option>
+          ))}
+        </select>
         <div style={{ display: "flex", gap: "1rem" }}>
           <button className="header button" onClick={handleSubmit}>
             {editId ? "Update" : "Post"}
@@ -115,6 +193,7 @@ function PostPage() {
                 setTitle('');
                 setDescription('');
                 setUrl('');
+                setDomain('');
               }}
             >
               Cancel
@@ -126,6 +205,48 @@ function PostPage() {
         </div>
       </div>
 
+      <div className="section-title" style={{ marginTop: "2rem" }}>📂 Manage Domains</div>
+      <div className="link-card" style={{ maxWidth: "500px" }}>
+        <input
+          type="text"
+          placeholder="New Domain Name"
+          value={newDomain}
+          onChange={e => setNewDomain(e.target.value)}
+        />
+        <button className="header button" onClick={handleAddDomain}>Add Domain</button>
+
+        {domains.map(d => (
+          <div key={d._id} style={{ marginTop: "0.75rem" }}>
+            {editingDomain === d._id ? (
+              <>
+                <input
+                  type="text"
+                  value={editingDomainName}
+                  onChange={e => setEditingDomainName(e.target.value)}
+                />
+                <button className="header button" onClick={() => handleEditDomain(d._id)}>Save</button>
+                <button className="header button" onClick={() => setEditingDomain(null)}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <span>{d.name}</span>
+                <button className="header button" onClick={() => {
+                  setEditingDomain(d._id);
+                  setEditingDomainName(d.name);
+                }}>Edit</button>
+                <button
+                  className="header button"
+                  style={{ backgroundColor: "#a31212" }}
+                  onClick={() => handleDeleteDomain(d._id)}
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
       <div className="section-title" style={{ marginTop: "2rem" }}>📎 All Links</div>
       {links.length === 0 ? (
         <p>No links found.</p>
@@ -134,6 +255,7 @@ function PostPage() {
           <div key={link._id} className="link-card">
             <h3>{link.title}</h3>
             <p>{link.description}</p>
+            <p><strong>Domain:</strong> {link.domain}</p>
             <a
               href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
               target="_blank"
