@@ -36,7 +36,6 @@ function DomainPostsPage() {
                 ⬇️ Download File
               </a>
             )}
-
             {link.url && (
               <a
                 href={link.url.startsWith("http") ? link.url : `https://${link.url}`}
