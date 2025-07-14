@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const AWS = require('aws-sdk');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +15,18 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   })
 );
+
+// AWS S3 Configuration
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID, // from your .env
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+const S3_BUCKET = process.env.AWS_BUCKET_NAME;
+
+// Multer setup for handling file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // MongoDB connection
 mongoose
@@ -57,7 +72,6 @@ app.post('/api/login', (req, res) => {
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.sendStatus(401);
-
   const token = authHeader.split(' ')[1];
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.sendStatus(403);
@@ -135,15 +149,60 @@ app.delete('/api/domains/:id', authMiddleware, async (req, res) => {
   if (!domainToDelete) return res.status(404).json({ message: 'Domain not found' });
 
   const domainName = domainToDelete.name;
-
-  // Delete all links associated with the domain
   await Link.deleteMany({ domain: domainName });
-
-  // Delete the domain itself
   await Domain.findByIdAndDelete(req.params.id);
-
   res.json({ message: 'Domain and related posts deleted' });
 });
+
+// S3 Upload route
+app.post('/api/upload', authMiddleware, upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    console.error("No file received");
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  console.log("Received file:", req.file.originalname);
+  console.log("Uploading to bucket:", S3_BUCKET);
+
+  const fileName = `${Date.now()}_${req.file.originalname}`;
+  const params = {
+    Bucket: S3_BUCKET,
+    Key: fileName,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+    // ACL: 'public-read',
+  };
+
+  try {
+    const result = await s3.upload(params).promise();
+    console.log("Upload success:", result);
+    res.json({ url: result.Location });
+  } catch (err) {
+    console.error('S3 upload error:', err);
+    res.status(500).json({ message: 'S3 upload failed', error: err.message });
+  }
+});
+
+// S3 Download route
+app.get('/api/download/:filename', async (req, res) => {
+  const filename = req.params.filename;
+
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: filename
+  };
+
+  try {
+    // Generate a signed URL or stream the file directly
+    const fileStream = s3.getObject(params).createReadStream();
+    fileStream.pipe(res);
+  } catch (err) {
+    console.error('Download error:', err);
+    res.status(500).json({ message: 'Error downloading file' });
+  }
+});
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
