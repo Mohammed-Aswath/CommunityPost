@@ -84,7 +84,26 @@ app.post('/api/links', authMiddleware, async (req, res) => {
 
 app.put('/api/links/:id', authMiddleware, async (req, res) => {
   const { title, description, url, fileUrl, domain } = req.body;
+
   try {
+    const existing = await Link.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: 'Link not found' });
+
+    const deleteFromS3 = async (fileUrl) => {
+      if (!fileUrl) return;
+      const u = new URL(fileUrl);
+      const hostMatchesBucket = u.hostname.startsWith(`${S3_BUCKET}.s3`);
+      if (hostMatchesBucket) {
+        const key = decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+        await s3.deleteObject({ Bucket: S3_BUCKET, Key: key }).promise();
+        console.log('Old S3 file deleted:', key);
+      }
+    };
+
+    if (existing.fileUrl && existing.fileUrl !== fileUrl) {
+      await deleteFromS3(existing.fileUrl);
+    }
+
     await Link.findByIdAndUpdate(req.params.id, { title, description, url, fileUrl, domain });
     res.json({ message: 'Link updated' });
   } catch (err) {
@@ -92,6 +111,7 @@ app.put('/api/links/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error updating link' });
   }
 });
+
 
 app.delete('/api/links/:id', authMiddleware, async (req, res) => {
   const link = await Link.findById(req.params.id);
