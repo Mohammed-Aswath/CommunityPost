@@ -15,9 +15,6 @@ function DomainPostsPage() {
       });
   }, [domainName]);
 
-  const isFileLink = (url) =>
-    url.startsWith("https://s3") || url.includes(".amazonaws.com");
-
   return (
     <div className="view-container">
       <h2 className="view-title">📌 {domainName} Posts</h2>
@@ -28,12 +25,24 @@ function DomainPostsPage() {
           <div key={link._id} className="link-card">
             <h3>{link.title}</h3>
             <p>{link.description}</p>
-            {isFileLink(link.url) ? (
-              <a href={link.url} target="_blank" rel="noopener noreferrer" download>
+
+            {link.fileUrl && (
+              <a
+                href={link.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
                 ⬇️ Download File
               </a>
-            ) : (
-              <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">
+            )}
+
+            {link.url && (
+              <a
+                href={link.url.startsWith("http") ? link.url : `https://${link.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 🔗 {link.url}
               </a>
             )}
