@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import { ThemeContext } from './ThemeContext';
-import './LoginPage.css'; // We'll define this next
+import './LoginPage.css';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -11,7 +11,8 @@ function LoginPage() {
   const { darkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent page reload
     if (!username || !password) {
       alert('Please fill in all fields');
       return;
@@ -37,24 +38,26 @@ function LoginPage() {
       <div className="login-box">
         <img
           src={darkMode
-            ? 'https://uxwing.com/wp-content/themes/uxwing/download/peoples-avatars/account-white-icon.png' // White login icon
-            : 'https://uxwing.com/wp-content/themes/uxwing/download/peoples-avatars/account-icon.png'} // Dark mode login icon
+            ? 'https://uxwing.com/wp-content/themes/uxwing/download/peoples-avatars/account-white-icon.png'
+            : 'https://uxwing.com/wp-content/themes/uxwing/download/peoples-avatars/account-icon.png'}
           alt="Login"
           className="login-logo"
         />
         <h2>Teacher Login</h2>
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
-        />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
-        <button onClick={handleSubmit}>Login</button>
+        <form onSubmit={handleSubmit}>
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+          />
+          <input
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <button type="submit">Login</button>
+        </form>
       </div>
     </div>
   );

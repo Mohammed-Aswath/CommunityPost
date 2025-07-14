@@ -38,7 +38,7 @@ function PostPage() {
   };
 
   const handleSubmit = async () => {
-    if (!title || !description || !url || !domain) {
+    if (!title || !url || !domain) {
       alert("Please fill all fields");
       return;
     }
