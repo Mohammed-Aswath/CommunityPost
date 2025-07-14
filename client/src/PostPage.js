@@ -1,3 +1,5 @@
+// PostPage.js
+
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 
@@ -45,7 +47,8 @@ function PostPage() {
       return;
     }
 
-    let finalUrl = url;
+    let fileUrl = null;
+    let externalUrl = url;
 
     if (file) {
       const formData = new FormData();
@@ -62,7 +65,7 @@ function PostPage() {
 
         const uploadData = await uploadRes.json();
         if (uploadRes.ok && uploadData.url) {
-          finalUrl = uploadData.url;
+          fileUrl = uploadData.url;
         } else {
           alert("File upload failed");
           return;
@@ -82,7 +85,7 @@ function PostPage() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ title, description, url: finalUrl, domain }),
+      body: JSON.stringify({ title, description, url: externalUrl, fileUrl, domain }),
     });
 
     if (res.ok) {
@@ -197,6 +200,11 @@ function PostPage() {
         <input type="text" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }} />
         <input type="text" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }} />
         <input type="text" placeholder="Optional External URL" value={url} onChange={e => setUrl(e.target.value)} style={{ marginBottom: "0.75rem", padding: "0.5rem", width: "100%" }} />
+        {editId && file === null && (
+          <div style={{ marginBottom: "0.5rem", fontSize: "0.9rem" }}>
+            <em>Existing file will remain unless a new one is selected</em>
+          </div>
+        )}
         <input type="file" onChange={e => setFile(e.target.files[0])} style={{ marginBottom: "0.75rem" }} />
         <select value={domain} onChange={e => setDomain(e.target.value)} style={{ marginBottom: "1rem", padding: "0.5rem", width: "100%" }}>
           <option value="">Select Domain</option>
@@ -257,7 +265,8 @@ function PostPage() {
               <div key={link._id} className="link-card" style={{ marginTop: "0.5rem" }}>
                 <h3>{link.title}</h3>
                 <p>{link.description}</p>
-                <a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a>
+                {link.fileUrl && <a href={link.fileUrl} target="_blank" rel="noopener noreferrer">Download File</a>}
+                {link.url && <a href={link.url} target="_blank" rel="noopener noreferrer">{link.url}</a>}
                 <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
                   <button className="header button" onClick={() => handleEdit(link)}>Edit</button>
                   <button className="header button" style={{ backgroundColor: "#a31212" }} onClick={() => handleDelete(link._id)}>Delete</button>
