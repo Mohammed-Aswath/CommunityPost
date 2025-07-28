@@ -163,14 +163,39 @@ app.delete('/api/domains/:id', authMiddleware, async (req, res) => {
   const dom = await Domain.findById(req.params.id);
   if (!dom) return res.status(404).json({ message: 'Domain not found' });
 
-  const posts = await Link.find({ domain: dom.name });
-  for (const p of posts) await app.handle({
-    method: 'DELETE',
-    url: `/api/links/${p._id}`,
-    headers: { authorization: req.headers.authorization }
-  }, res => {}, () => {});
-  await Domain.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Domain and related posts deleted' });
+  try {
+    // Find all links with that domain
+    const links = await Link.find({ domain: dom.name });
+
+    // Delete associated S3 files (if any)
+    for (const link of links) {
+      if (link.fileUrl) {
+        const u = new URL(link.fileUrl);
+        const hostMatchesBucket = u.hostname.startsWith(`${S3_BUCKET}.s3`);
+        if (hostMatchesBucket) {
+          const key = decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+          try {
+            await s3.deleteObject({ Bucket: S3_BUCKET, Key: key }).promise();
+            console.log('Deleted S3 file:', key);
+          } catch (s3Err) {
+            console.warn(`Failed to delete S3 object: ${key}`, s3Err.message);
+          }
+        }
+      }
+    }
+
+    // Delete the posts (links) from DB
+    await Link.deleteMany({ domain: dom.name });
+
+    // Finally, delete the domain
+    await Domain.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Domain and all related posts deleted' });
+
+  } catch (err) {
+    console.error('Error deleting domain and posts:', err);
+    res.status(500).json({ message: 'Error deleting domain and its posts' });
+  }
 });
 
 /* ============ S3 Upload & Download ============ */
